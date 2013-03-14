@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, Main!</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="app_name">parko_recorder3.32</string>
+     <string name="menu_settings">Settings</string>
+        <color name="red">#FF1111</color>
+       <color name="black">#000000</color>
+        <color name="green">#11FF11</color>       
+        <color name="purple">#FF11FF</color>       
+        <string-array name="modes">
+        <item >Walking</item>
+        <item >Driving</item>
+        <item >Parking</item>
+        <item >Bus</item>
+        <item >Sherut</item>
+        <item >biking</item>
+        <item >texting</item>
+        <item >office</item>
+    </string-array>
+</resources>
+
