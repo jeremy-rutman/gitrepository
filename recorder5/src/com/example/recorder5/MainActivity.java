@@ -33,6 +33,7 @@
 //
 //    Note that you should not use the 'lib' prefix and '.so' suffix here.
 //
+// this is a change to test git
 
 package com.example.recorder5;
 
