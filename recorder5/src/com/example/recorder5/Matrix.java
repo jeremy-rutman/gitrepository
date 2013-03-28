@@ -143,7 +143,17 @@ public class Matrix {
 	        }    
     }
 
+   
    public static void vectorprint(float[] d) {
+	      int m = d.length;
+
+	        for (int i=0;i<m;i++){
+	 
+	        		System.out.print(d[i]+" ");
+	        	}
+	        	System.out.println();
+	        }    
+   public static void vectorprint(double[] d) {
 	      int m = d.length;
 
 	        for (int i=0;i<m;i++){

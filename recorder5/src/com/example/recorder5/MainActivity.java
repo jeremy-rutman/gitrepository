@@ -1,4 +1,3 @@
-//TODO 
 //prevent false driving when u stop walking by checking if walked in last 5  - 10 sec or whatever
 //check walking north vs. walking west
 //true walking detection eg by fourier
@@ -7,7 +6,7 @@
 //try using dOy/dt -  exclude ] driving if too high
 
 //DONE 
-//use orientation changes to check if driving or not i.e. change in orientation asround horizontal axis should be low (no rotation up / down)
+//use orientation changes to check if driving or not i.e. change in orientation around horizontal axis should be low (no rotation up / down)
 
 //How to use NDK (to get java to run C code)
 // - Your application's source code will declare one or more methods
@@ -48,6 +47,7 @@ import java.io.InputStreamReader;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface.OnClickListener;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -59,7 +59,6 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.view.Menu;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
@@ -68,8 +67,6 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ToggleButton;
-
-import com.example.recorder5.R;
 
 
 public class MainActivity extends Activity implements SensorEventListener {
@@ -431,17 +428,21 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 		//        final Button clearLog = ((Button)findViewById(R.id.button1));
 		final Button clearLog = ((Button)findViewById(R.id.clearLog));
-		clearLog.setOnClickListener(new OnClickListener() {
 
-			@Override
-			public void onClick(View v) {
-				if (mFOS!=null){
-					CloseLogFile(mFOS);
-					mFOS=null;
-					mFOS=initializeLogFile(mFilename, true);
-				}
-			}
-		});
+		//some import got munged here
+//		clearLog.setOnClickListener(new OnClickListener() {
+//
+//			@Override
+//			public void onClick(View v) {
+//				if (mFOS!=null){
+//					CloseLogFile(mFOS);
+//					mFOS=null;
+//					mFOS=initializeLogFile(mFilename, true);
+//				}
+//			}
+//		});
+		
+		
 	}
 
 
@@ -729,7 +730,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 
 
-		if(mGot_Acceleration && mGot_Magnetometer) {
+		if(mGot_Acceleration && mGot_Magnetometer && mGot_Orientation) {
 			float [] gravity = new float[4]; 
 			gravity[0]=mLastX;
 			gravity[1]=mLastY;		
@@ -741,6 +742,16 @@ public class MainActivity extends Activity implements SensorEventListener {
 			geomagnetic[2]=mLastHz;		
 			geomagnetic[3]=(float)0.0;		
 
+			
+//			Also, an aside: the best method to get orientation in Android is to listen for Sensor.TYPE_ROTATION_VECTOR events. These are filled with the best possible orientation on most (i.e. Gingerbread or newer) platforms. It is actually the vector part of the quaternion. You can get the full quaternion using this (and last two lines are a way to get the RotationMatrix):
+//
+//				float vec[] = event.values.clone();
+//				float quat[] = new float[4];
+//				SensorManager.getQuaternionFromVector(quat, vec);
+//				float [] RotMat = new float[9];
+//				SensorManager.getRotationMatrixFromVector(RotMat, quat);
+				
+				
 			bool1=SensorManager.getRotationMatrix ( Rotation_matrix,  Inclination_matrix, gravity,  geomagnetic);
 
 			if(bool1){
@@ -789,6 +800,31 @@ public class MainActivity extends Activity implements SensorEventListener {
 				//				tvOy.setText(Float.toString((float)(Math.round(mOrientationVector[1]*100.0)/100.0)));
 				//				tvOz.setText(Float.toString((float)(Math.round(mOrientationVector[2]*100.0)/100.0)));
 
+				double mCosAlpha=Math.cos((double)mLastA);  //azimuth 
+				double mSinAlpha=Math.sin((double)mLastA);  
+				double mCosBeta=Math.cos((double)mLastP);  //pitch
+				double mSinBeta=Math.sin((double)mLastP);
+				double mCosGamma=Math.cos((double)mLastR);  //roll
+				double mSinGamma=Math.sin((double)mLastR);
+				float[] myRotationMatrix=new float [9];
+				
+				//this is the matrix formed by  Rx(gamma)*Ry(beta)*Rz(alpha) - see http://en.wikipedia.org/wiki/Rotation_matrix
+				myRotationMatrix[0]=(float) (mCosBeta*mCosAlpha);
+				myRotationMatrix[1]=(float) (-mCosBeta*mSinAlpha);
+				myRotationMatrix[2]=(float) mSinBeta;
+				myRotationMatrix[3]=(float) (mCosAlpha*mSinBeta*mSinGamma+mSinAlpha*mCosGamma);
+				myRotationMatrix[4]=(float) (-mSinAlpha*mSinBeta*mSinGamma+mCosAlpha*mCosGamma);
+				myRotationMatrix[5]=(float) (-mSinGamma*mCosBeta);
+				myRotationMatrix[6]=(float) (-mCosAlpha*mSinBeta*mCosGamma+mSinAlpha*mSinGamma);
+				myRotationMatrix[7]=(float) (mSinAlpha*mSinBeta*mCosGamma+mCosAlpha*mSinGamma);
+				myRotationMatrix[8]=(float) (mCosBeta*mCosGamma);
+
+				float[] mOrientationFromRotMatrix=new float[3];
+				SensorManager.getOrientation(Rotation_matrix, mOrientationFromRotMatrix);
+				mOrientationFromRotMatrix[0]=(float)(mOrientationFromRotMatrix[0]*180.0/3.1415);
+				mOrientationFromRotMatrix[1]=(float)(mOrientationFromRotMatrix[1]*180.0/3.1415);
+				mOrientationFromRotMatrix[2]=(float)(mOrientationFromRotMatrix[2]*180.0/3.1415);
+				
 				Matrix.flatmultiply(mAccelerationVectorWC, Rotation_matrix, mAccelerationVector);
 				//				System.out.print("acc vectorwc");
 				//				Matrix.vectorprint(mAccelerationVectorWC);
@@ -813,6 +849,16 @@ public class MainActivity extends Activity implements SensorEventListener {
 				tvOx.setText(Float.toString((float)(Math.round(mLinearAccelerationVectorWC[0]*1000.0)/1000.0)));
 				tvOy.setText(Float.toString((float)(Math.round(mLinearAccelerationVectorWC[1]*1000.0)/1000.0)));
 				tvOz.setText(Float.toString((float)(Math.round(mLinearAccelerationVectorWC[2]*1000.0)/1000.0)));
+				
+				System.out.println("rot matrix from android");				
+				Matrix.arrayprint(Rotation_matrix);
+				System.out.println("rot matrix by hand calculation");
+				Matrix.arrayprint(myRotationMatrix);
+				System.out.println("orientation from sensor");
+				Matrix.vectorprint(mOrientationVector);
+				System.out.println("orientation from rotmat");
+				Matrix.vectorprint(mOrientationFromRotMatrix);
+				
 			}
 		}
 
@@ -851,12 +897,27 @@ public class MainActivity extends Activity implements SensorEventListener {
 		
 	  tvOz= (TextView)findViewById(R.id.unclaimed2);
       tvOz.setText( stringFromJNI() );
-	  tvOz= (TextView)findViewById(R.id.a_c4r12);
+	  tvOz= (TextView)findViewById(R.id.c4r7);
   //    tvOz.setText(Float.toString((float)floatFromJNI()));		
   //    tvOz.setText(Double.toString(intFromJNI()/100.0));		
 //      tvOz.setText(Double.toString(intFromJNIwithInput((int)321)/100.0));		
 //      tvOz.setText(Double.toString(intFromJNIwithFloatInput((float)321.2)/100.0));		
-      tvOz.setText(Double.toString(intFromJNIwithDoubleInput((double)321.2)));		
+ //     tvOz.setText(Integer.toString(intFromJNIwithDoubleInput((double)321.2)));	
+	  double[] R= new double[9];
+	  double[] linA=new double[3];
+	  double[] dO=new double[3];
+	 for(i=0;i<3;i++){
+		 linA[i]=mLinearAccelerationVector[i];
+	 dO[i]=mOrientationVector[i];
+	}
+	 for(i=0;i<9;i++){
+		R[i]=Rotation_matrix[i];
+	}
+Matrix.vectorprint(R);
+
+//    tvOz.setText(Integer.toString(CalculateDrivingLikelihoodCCode(linA,R,dO)));	
+tvOz.setText(Integer.toString(CalculateDrivingLikelihoodCCode(linA[0],linA[1],linA[2],dO[0],dO[1],dO[2],R[0],R[1],R[2],R[3],R[4],R[5],R[6],R[7],R[8])));	
+    
       
 		
 		//        setContentView(tv);
@@ -1835,6 +1896,9 @@ public class MainActivity extends Activity implements SensorEventListener {
     public native int  intFromJNIwithInput(int input);    
     public native int  intFromJNIwithFloatInput(float finput);
     public native int intFromJNIwithDoubleInput(double finput);
+//    public native int CalculateDrivingLikelihoodCCode(double []A,double []v,double[]R);
+    public native int CalculateDrivingLikelihoodCCode(double Ax,double Ay,double Az,double Ox,double Oy,double Oz,double R1,double R2,double R3,double R4,double R5,double R6,double R7,double R8,double R9);
+       
  //   static {
  //   	 System.loadLibrary("HelloWorld");
   //  	}

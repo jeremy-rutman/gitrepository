@@ -20,4 +20,5 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := jeremy
 #LOCAL_SRC_FILES := hello-jni.c
 LOCAL_SRC_FILES := jeremy.c
+LOCAL_LDLIBS :=  -llog 
 include $(BUILD_SHARED_LIBRARY)

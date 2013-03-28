@@ -249,7 +249,11 @@
 			    android:gravity="left"
 			    android:text="Az.no"
 			    android:textSize="12sp" />
-
+			<TextView  
+	    		android:layout_width="wrap_content" 
+	    		android:layout_height="wrap_content"
+	    		android:id="@+id/c4r7"
+	    		android:gravity="left"/>
 		</TableRow>
 		
 		<TableRow>
